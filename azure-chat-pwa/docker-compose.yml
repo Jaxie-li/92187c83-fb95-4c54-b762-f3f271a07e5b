@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  azure-chat-pwa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: azure-chat-pwa
+    ports:
+      - "5500:5500"
+    environment:
+      - NODE_ENV=production
+      - PORT=5500
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5500/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 3s
+      start_period: 40s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
